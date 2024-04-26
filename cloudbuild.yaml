@@ -156,16 +156,14 @@ steps:
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/jupyterhub_tf_result.txt
 
-        kubectl get pods -n ml-$SHORT_SHA-$_BUILD_ID-jupyter 
         kubectl wait --all pods -n ml-$SHORT_SHA-$_BUILD_ID-jupyter --for=condition=Ready --timeout=1500s
-        kubectl get pods -n ml-$SHORT_SHA-$_BUILD_ID-jupyter 
         kubectl get services -n ml-$SHORT_SHA-$_BUILD_ID-jupyter
-        kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID-jupyter service/proxy-public 9443:80 &
+        kubectl port-forward -n ml-$SHORT_SHA-$_BUILD_ID-jupyter service/proxy-public 9442:80 &
         # Wait port-forwarding to take its place
         sleep 5s
 
         cd /workspace/modules/jupyter/tests
-        python3 test_hub.py "127.0.0.1:9443" $_AUTOPILOT_CLUSTER
+        python3 test_hub.py "127.0.0.1:9442" $_AUTOPILOT_CLUSTER
         echo "pass" > /workspace/jupyterhub_test_result.txt
     allowFailure: true
     waitFor: ['create gke cluster']
@@ -188,8 +186,6 @@ steps:
         -var=workload_identity_service_account=jupyter-sa-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-jupyter-$SHORT_SHA-$_BUILD_ID \
         -auto-approve -no-color -lock=false
-
-        kubectl get events
 
     allowFailure: true
     waitFor: ['test jupyterhub']
@@ -225,8 +221,8 @@ steps:
         -var=kubernetes_namespace=rag-$SHORT_SHA-$_BUILD_ID \
         -var=gcs_bucket=gke-aieco-rag-$SHORT_SHA-$_BUILD_ID \
         -var=ray_service_account=ray-sa-4-rag-$SHORT_SHA-$_BUILD_ID \
+        -var=rag_service_account=rag-sa-4-rag-$SHORT_SHA-$_BUILD_ID \
         -var=jupyter_service_account=jupyter-sa-4-rag-$SHORT_SHA-$_BUILD_ID \
-        -var=rag_service_account=rag-sa-$SHORT_SHA-$_BUILD_ID \
         -var=cloudsql_instance=pgvector-instance-$SHORT_SHA-$_BUILD_ID \
         -auto-approve -no-color -lock=false
         echo "pass" > /workspace/rag_tf_result.txt
@@ -245,13 +241,13 @@ steps:
 
         # Validate JupyterHub: Get hub url
         kubectl get services -n rag-$SHORT_SHA-$_BUILD_ID
-        kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/proxy-public 9442:80 &
+        kubectl port-forward -n rag-$SHORT_SHA-$_BUILD_ID service/proxy-public 9443:80 &
         # Wait port-forwarding to take its place
         sleep 5s
 
         # Validate JupyterHub: Test Hub
         cd /workspace/modules/jupyter/tests
-        python3 test_hub.py "127.0.0.1:9442" $_AUTOPILOT_CLUSTER
+        python3 test_hub.py "127.0.0.1:9443" $_AUTOPILOT_CLUSTER
         echo "pass" > /workspace/rag_jupyterhub_test_result.txt
 
         # Validate RAG: Test rag frontend
