@@ -197,8 +197,16 @@ variable "run_test_automatically" {
   default     = false
 }
 
+// TODO: add validation to make k8s_hf_secret & hugging_face_secret mutually exclusive once terraform is updated with: https://discuss.hashicorp.com/t/experiment-feedback-input-variable-validation-can-cross-reference-other-objects/66644
+variable "k8s_hf_secret" {
+  description = "Name of secret for huggingface token; stored in k8s "
+  type        = string
+  nullable    = true
+  default     = null
+}
+
 variable "hugging_face_secret" {
-  description = "name of the kubectl huggingface secret token"
+  description = "name of the kubectl huggingface secret token; stored in Secret Manager. Security considerations: https://kubernetes.io/docs/concepts/security/secrets-good-practices/"
   type        = string
   nullable    = true
   default     = null
@@ -209,4 +217,15 @@ variable "hugging_face_secret_version" {
   type        = string
   nullable    = true
   default     = null
+}
+
+variable "request_type" {
+  description = "The method of request used when calling the model server (http or grpc)"
+  type        = string
+  nullable    = true
+  default     = "http"
+  validation {
+    condition     = var.request_type == "http" || var.request_type == "grpc"
+    error_message = "The request_type must be 'http' or 'grpc'."
+  }
 }

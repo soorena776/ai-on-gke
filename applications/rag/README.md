@@ -62,7 +62,7 @@ This section sets up the RAG infrastructure in your GCP project using Terraform.
 1. `cd ai-on-gke/applications/rag`
 
 2. Edit `workloads.tfvars` to set your project ID, location, cluster name, and GCS bucket name. Ensure the `gcs_bucket` name is globally unique (add a random suffix). Optionally, make the following changes:
-    * (Recommended) [Enable authenticated access](#configure-authenticated-access-via-iap) for JupyterHub, frontend chat and Ray dashboard services.
+    * (Recommended) [Enable authenticated access](#configure-authenticated-access-via-iap-recommended) for JupyterHub, frontend chat and Ray dashboard services.
     * (Optional) Set a custom `kubernetes_namespace` where all k8s resources will be created.
     * (Optional) Set `autopilot_cluster = false` to deploy using GKE Standard.
     * (Optional) Set `create_cluster = false` if you are bringing your own cluster. If using a GKE Standard cluster, ensure it has an L4 nodepool with autoscaling and node autoprovisioning enabled. You can simplify setup by following the Terraform instructions in [`infrastructure/README.md`](https://github.com/GoogleCloudPlatform/ai-on-gke/blob/main/infrastructure/README.md).
@@ -216,12 +216,14 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CLUSTER_L
         - GCS bucket names have to be globally unique, pick a different name with a random suffix.
     - Cloud SQL instance already exists:
         - Ensure the `cloudsql_instance` name doesn't already exist in your project.
+    - GMP operator webhook connection refused:
+        - This is a rare, transient error. Run `terraform apply` again to resume deployment.
 
 4. Troubleshoot `terraform destroy` failures:
     - Network deletion issue:
         - `terraform destroy` fails to delete the network due to a known issue in the GCP provider. For now, the workaround is to manually delete it.
 
-6. Troubleshoot error: `Repo model mistralai/Mistral-7B-Instruct-v0.1 is gated. You must be authenticated to access it.` for the pod of deployment `mistral-7b-instruct`.
+5. Troubleshoot error: `Repo model mistralai/Mistral-7B-Instruct-v0.1 is gated. You must be authenticated to access it.` for the pod of deployment `mistral-7b-instruct`.
 
    The error is because the RAG deployments uses `Mistral-7B-instruct` which is now a gated model on Hugging Face. Deployments fail as they require a Hugging Face authentication token, which is not part of the current workflow.
    While we are actively working on long-term fix. This is how to workaround the error:
